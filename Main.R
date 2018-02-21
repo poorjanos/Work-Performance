@@ -34,6 +34,12 @@ if (strftime(Sys.Date(),'%u') != 1 | strftime(Sys.Date(),'%u') != 7) {
     config::get("ifi",
                 file = "C:\\Users\\PoorJ\\Projects\\config.yml")
   
+  # Create dirs (dir.create() does not crash when dir already exists)
+  dir.create(here::here("Data"), showWarnings = FALSE)
+  dir.create(here::here("Reports"), showWarnings = FALSE)
+  dir.create(here::here("SQL"), showWarnings = FALSE)
+  dir.create(here::here("Utils"), showWarnings = FALSE)
+  
   ########################################################################################
   # Data Extraction ######################################################################
   ########################################################################################

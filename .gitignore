@@ -1,8 +1,8 @@
 # Output files (csv, html, xlsx)
-.csv
-.html
-.xlsx
-.xls
+*.csv
+*.html
+*.xlsx
+*.xls
 scriptLog
 
 # History files
