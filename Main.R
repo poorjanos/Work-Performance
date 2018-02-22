@@ -36,6 +36,10 @@ if (strftime(Sys.Date(),'%u') != 1 | strftime(Sys.Date(),'%u') != 7) {
   
   # Create dirs (dir.create() does not crash when dir already exists)
   dir.create(here::here("Data"), showWarnings = FALSE)
+  dir.create(here::here("Data", "Analitika"), showWarnings = FALSE)
+  dir.create(here::here("Data", "IFI"), showWarnings = FALSE)
+  dir.create(here::here("Data", "Kontakt"), showWarnings = FALSE)
+  dir.create(here::here("Data", "Dashboard"), showWarnings = FALSE)
   dir.create(here::here("Reports"), showWarnings = FALSE)
   dir.create(here::here("SQL"), showWarnings = FALSE)
   dir.create(here::here("Utils"), showWarnings = FALSE)
