@@ -12,7 +12,7 @@ library(lubridate)
 library(xlsx)
 
 
-if (!strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7) {
+if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
   # Define constants
   # Cons: accounting period
   period  <-
