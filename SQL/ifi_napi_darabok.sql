@@ -1,3 +1,4 @@
+/* Formatted on 2018.03.05. 13:05:30 (QP5 v5.115.810.9015) */
 SELECT   a.user_azon,
          c.torzsszam,
          a.szlaforg_fej_azon,
@@ -18,6 +19,11 @@ SELECT   a.user_azon,
          AND b.forgtet_irany = 'J'
          AND a.user_azon IN
                   ('KISSAT',
+                   'FILATZNM',
+                   'HORVATHANDR',
+                   'KERTESZA',
+                   'HAKLARV',
+                   'NEMETHDI',
                    'VISEGRADIM',
                    'KOROCZKINESZJ',
                    'MIHOCZANEKZS',
