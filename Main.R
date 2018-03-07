@@ -85,8 +85,8 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
       "Utils",
       "user_name_group.sql"
     ))
-  al_il_darabok <- "select * from t_al_il_telj"
-  al_il_sulyok <- "select * from t_al_il_suly"
+  al_il_darabok <- "select * from t_al_il_telj_kimenet"
+  al_il_sulyok <- "select * from t_al_il_suly_kimenet"
   minoseg <- paste0("select * from t_minoseg_", period)
   korr <- "select * from t_bsc_korr"
   
@@ -320,10 +320,11 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
   # Create IFI aggregated weight table to merge to KONTAKT weight data
   ifi_history_tr <-
     as.data.frame(ifi_history[ymd(ifi_history$NAP) >= Sys.Date() - 180, ])
+  
   ifi_history_agg <- ifi_history_tr %>%
     mutate(F_LEAN_TIP = 'IFI',
            TEVEKENYSEG = 'IFI díjazonosítás') %>%
-    group_by(F_LEAN_TIP, TEVEKENYSEG, F_OKA = CEG_SZLASZAM) %>%
+    group_by(F_LEAN_TIP, TEVEKENYSEG, F_OKA = CEG_SZLASZAM, KIMENET = "Lezar") %>%
     summarize(
       MEDIAN = median(CKLIDO),
       TEV_DB = as.numeric(length(FORGTET_AZON)),
@@ -336,9 +337,10 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
   
   # Compute base then all weights
   bazis <-
-    t_komb_suly[t_komb_suly$TEVEKENYSEG == "LAKÁS sikertelen KPM adatellenõrzés"
-                &
-                  t_komb_suly$F_OKA == "Normál", "MEDIAN"]
+    t_komb_suly[t_komb_suly$TEVEKENYSEG == "LAKÁS sikertelen KPM adatellenõrzés" &
+                  t_komb_suly$F_OKA == "Normál" &
+                  t_komb_suly$KIMENET == "Lezar"
+                , "MEDIAN"]
   
   t_komb_suly <-
     t_komb_suly %>% mutate(BAZIS = bazis, SULY = MEDIAN / bazis)
@@ -392,6 +394,7 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
       VEGE = F_INT_END,
       TEVEKENYSEG,
       F_OKA,
+      KIMENET,
       CKLIDO
     )
   
@@ -410,6 +413,7 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
     mutate(
       F_LEAN_TIP = 'IFI',
       TEVEKENYSEG = 'IFI díjazonosítás',
+      KIMENET = 'Lezar',
       F_IVK = paste0(SZLAFORG_FEJ_AZON, "_", FORGTET_AZON, "_",
                      AZON_FORGTET_AZON)
     ) %>%
@@ -421,6 +425,7 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
            VEGE,
            TEVEKENYSEG,
            F_OKA = CEG_SZLASZAM,
+           KIMENET,
            CKLIDO)
   
   
@@ -451,16 +456,18 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
       NEV = F_NEV,
       LEAN_TIP = F_LEAN_TIP,
       TEVEKENYSEG,
-      OKA = F_OKA
+      OKA = F_OKA,
+      KIMENET
     ) %>%
     summarize(ERINTETT_DB = length(F_IVK),
               LOGIDO_MM = sum(CKLIDO)) %>%
     left_join(
-      t_komb_suly[c("F_LEAN_TIP", "TEVEKENYSEG", "F_OKA", "SULY")],
+      t_komb_suly[c("F_LEAN_TIP", "TEVEKENYSEG", "F_OKA", "KIMENET", "SULY")],
       by = c(
         "LEAN_TIP" = "F_LEAN_TIP",
         "TEVEKENYSEG" = "TEVEKENYSEG",
-        "OKA" = "F_OKA"
+        "OKA" = "F_OKA",
+        "KIMENET" = "KIMENET"
       )
     ) %>%
     mutate(SULYOZOTT_DB = ERINTETT_DB *
@@ -568,7 +575,8 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
       CSOPORT = F_KISCSOPORT,
       LEAN_TIP = F_LEAN_TIP,
       TEVEKENYSEG,
-      OKA = F_OKA
+      OKA = F_OKA,
+      KIMENET
     ) %>%
     summarize(
       ERINTETT_DB = length(F_IVK),
@@ -578,13 +586,13 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
     ) %>%
     left_join(
       t_komb_suly[c("F_LEAN_TIP", "TEVEKENYSEG",
-                    "F_OKA", "SULY")],
+                    "F_OKA", "KIMENET", "SULY")],
       by = c(
         "LEAN_TIP" = "F_LEAN_TIP",
         "TEVEKENYSEG" =
           "TEVEKENYSEG",
-        "OKA" =
-          "F_OKA"
+        "OKA" = "F_OKA",
+        "KIMENET" = "KIMENET"
       )
     ) %>%
     mutate(SULYOZOTT_DB = ERINTETT_DB *
@@ -601,7 +609,8 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
       NEV = F_NEV,
       LEAN_TIP = F_LEAN_TIP,
       TEVEKENYSEG,
-      OKA = F_OKA
+      OKA = F_OKA,
+      KIMENET
     ) %>%
     summarize(
       ERINTETT_DB = length(F_IVK),
@@ -611,11 +620,12 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
     ) %>%
     left_join(
       t_komb_suly[c("F_LEAN_TIP", "TEVEKENYSEG",
-                    "F_OKA", "SULY")],
+                    "F_OKA", "KIMENET", "SULY")],
       by = c(
         "LEAN_TIP" = "F_LEAN_TIP",
         "TEVEKENYSEG" = "TEVEKENYSEG",
-        "OKA" = "F_OKA"
+        "OKA" = "F_OKA",
+        "KIMENET" = "KIMENET"
       )
     ) %>%
     mutate(SULYOZOTT_DB = ERINTETT_DB * SULY,
@@ -628,6 +638,7 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
         LEAN_TIP,
         TEVEKENYSEG,
         OKA,
+        KIMENET,
         CSOPORT_CKLIDO_ATLAG,
         CSOPORT_CKLIDO_MEDIAN,
         CSOPORT_NAPI_DB
@@ -636,7 +647,8 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
         "CSOPORT" = "CSOPORT",
         "LEAN_TIP" = "LEAN_TIP",
         "TEVEKENYSEG" = "TEVEKENYSEG",
-        "OKA" = "OKA"
+        "OKA" = "OKA",
+        "KIMENET" = "KIMENET"
       )
     )
   
@@ -648,6 +660,7 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
       LEAN_TIP,
       TEVEKENYSEG,
       OKA,
+      KIMENET,
       SULY,
       ERINTETT_DB,
       SULYOZOTT_DB,
@@ -658,7 +671,7 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
       USER_NAPI_DB,
       CSOPORT_NAPI_DB
     ) %>%
-    arrange(CSOPORT, NEV, LEAN_TIP, TEVEKENYSEG, OKA)
+    arrange(CSOPORT, NEV, LEAN_TIP, TEVEKENYSEG, OKA, KIMENET)
   
   
   ########################################################################################
