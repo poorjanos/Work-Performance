@@ -66,7 +66,7 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
          classPath = "C:\\Users\\PoorJ\\Desktop\\ojdbc7.jar")
   
   
-  # Extract KONTAKT data #################################################################
+  # Extract KONTAKT data ----------------------------------------------------------------
   # Open connection
   jdbcConnection <-
     dbConnect(
@@ -101,7 +101,7 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
   dbDisconnect(jdbcConnection)
   
   
-  # Extract IFI data #####################################################################
+  # Extract IFI data --------------------------------------------------------------------
   # Open connection
   jdbcConnection <-
     dbConnect(
@@ -131,13 +131,13 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
   # Data Transformation ##################################################################
   ########################################################################################
   
-  # Transform KONTAKT data ###############################################################
+  # Transform KONTAKT data --------------------------------------------------------------
   t_al_il_feladat_suly[is.na(t_al_il_feladat_suly$F_OKA), "F_OKA"] <-
     "Egyéb"
   t_al_il_telj[is.na(t_al_il_telj$F_OKA), "F_OKA"] <- "Egyéb"
   
   
-  # Transform IFI data ###################################################################
+  # Transform IFI data -------------------------------------------------------------------
   t_ifi_napi_darabok$VEGE <- ymd_hms(t_ifi_napi_darabok$DATUM)
   t_ifi_napi_darabok <- arrange(t_ifi_napi_darabok, USER_AZON, VEGE)
   t_ifi_napi_darabok$NAP <-
@@ -316,7 +316,7 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
   dbDisconnect(jdbcConnection)
   
   
-  # Compute unified KONTAKT & IFI weight table ##########################################
+  # Compute unified KONTAKT & IFI weight table ------------------------------------------
   # Create IFI aggregated weight table to merge to KONTAKT weight data
   ifi_history_tr <-
     as.data.frame(ifi_history[ymd(ifi_history$NAP) >= Sys.Date() - 180, ])
@@ -381,7 +381,7 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
   # Compute performance ##################################################################
   ########################################################################################
   
-  # KONAKT ###############################################################################
+  # KONAKT -------------------------------------------------------------------------------
   # Compute unit based analitics (in case of KONTAKT accounting perid is queried by original SQL)
   t_telj_kontakt <-
     mutate(t_al_il_telj, NAP = as.Date(F_INT_BEGIN)) %>%
@@ -398,7 +398,7 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
       CKLIDO
     )
   
-  # IFI ##################################################################################
+  # IFI ----------------------------------------------------------------------------------
   # Get accounting period start (in case of KONTAKT history table is queried by origonal SQL)
   # -> needs to be truncated here
   if (month(Sys.Date()) < 7) {
@@ -429,7 +429,7 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
            CKLIDO)
   
   
-  # Merge KONTAKT and IFI ################################################################
+  # Merge KONTAKT and IFI ----------------------------------------------------------------
   t_telj_komb <- rbind(t_telj_kontakt, t_telj_ifi)
   
   # Add group and name
@@ -447,7 +447,7 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
     row.names = FALSE
   )
   
-  # Aggregate and add weights ############################################################
+  # Aggregate and add weights ------------------------------------------------------------
   t_telj_komb_agg <- t_telj_komb %>%
     group_by(
       NAP,
@@ -471,7 +471,17 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
       )
     ) %>%
     mutate(SULYOZOTT_DB = ERINTETT_DB *
-             SULY)
+             SULY) %>% 
+    ungroup()
+ 
+  # Remove users and recode groups--------------------------------------------------------
+  t_telj_komb_agg <- t_telj_komb_agg %>%
+                  filter(TORZSSZAM != 110398) %>% 
+                  mutate(CSOPORT = case_when(.$TORZSSZAM %in% c(920578, 920101, 916236) ~ "Welcome",
+                                             .$CSOPORT == "Minõségbiztosítás" ~ "Utánkövetés",
+                                             TRUE ~ .$CSOPORT))
+  
+  
   
   
   
@@ -483,7 +493,7 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
   corr_pct <- t_korr[t_korr$IDOSZAK == period, "PERF_PCT"]
   corr_coeff <- 1 - ((0.9 - corr_pct) / 0.01 * 0.002)
   
-  # Generate final rolling report per user ##############################################
+  # Generate final rolling report per user ----------------------------------------------
   t_telj_final <- t_telj_komb_agg %>%
     group_by(CSOPORT, TORZSSZAM, NEV) %>%
     summarise(
@@ -524,7 +534,7 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
   t_telj_final <- t_telj_final %>% arrange(CSOPORT, NEV)
   
   
-  # Generate report for day before per user #############################################
+  # Generate report for day before per user ---------------------------------------------
   t_telj_lastday <-
     t_telj_komb_agg[t_telj_komb_agg$NAP == max(t_telj_komb_agg$NAP), ]
   t_telj_lastday <-
@@ -568,7 +578,7 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
   t_telj_lastday <- t_telj_lastday %>% arrange(CSOPORT, NEV)
   
   
-  # Generate aggregated analytics per user ##########################################################
+  # Generate aggregated analytics per user ----------------------------------------------------------
   t_telj_csoport <-
     group_by(
       t_telj_komb,
