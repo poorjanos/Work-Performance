@@ -476,13 +476,10 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
  
   # Remove users and recode groups--------------------------------------------------------
   t_telj_komb_agg <- t_telj_komb_agg %>%
-                  filter(TORZSSZAM != 110398) %>% 
+                  filter(!TORZSSZAM %in% c(110398, 913128)) %>% 
                   mutate(CSOPORT = case_when(.$TORZSSZAM %in% c(920578, 920101, 916236) ~ "Welcome",
                                              .$CSOPORT == "Minõségbiztosítás" ~ "Utánkövetés",
                                              TRUE ~ .$CSOPORT))
-  
-  
-  
   
   
   #######################################################################################
