@@ -15,7 +15,7 @@ library(xlsx)
 if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
   
   # Import helper functions
-  source(here:here("R", "data_manipulation.R"))
+  source(here::here("R", "data_manipulation.R"))
   
   # Define constants
   # Cons: accounting period

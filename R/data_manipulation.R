@@ -37,10 +37,10 @@ gen_perf_report <- function(df, corr = 1, df_quality, type = "agg") {
                            .$TELJ_OSSZESEN < 1.1 ~ 1,
                            TRUE ~ 2),
       KOMP_KAT = case_when(
-        .$CSOPORT == 'Utánkövetés' & .$KOMP < 7 ~ 0,
-        .$CSOPORT == 'Utánkövetés' &
+        .$CSOPORT %in% c('Utánkövetés', 'Welcome') & .$KOMP < 7 ~ 0,
+        .$CSOPORT %in% c('Utánkövetés', 'Welcome') &
           .$KOMP < 10.5 ~ 1,
-        .$CSOPORT == 'Utánkövetés' &
+        .$CSOPORT %in% c('Utánkövetés', 'Welcome') &
           .$KOMP >= 10.5 ~ 2,
         .$KOMP < 6 ~ 0,
         .$KOMP < 9.5 ~ 1,
