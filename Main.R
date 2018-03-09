@@ -13,6 +13,10 @@ library(xlsx)
 
 
 if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
+  
+  # Import helper functions
+  source(here:here("R", "data_manipulation.R"))
+  
   # Define constants
   # Cons: accounting period
   period  <-
@@ -43,6 +47,7 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
   dir.create(here::here("Reports"), showWarnings = FALSE)
   dir.create(here::here("SQL"), showWarnings = FALSE)
   dir.create(here::here("Utils"), showWarnings = FALSE)
+  
   
   ########################################################################################
   # Data Extraction ######################################################################
@@ -476,10 +481,14 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
  
   # Remove users and recode groups--------------------------------------------------------
   t_telj_komb_agg <- t_telj_komb_agg %>%
-                  filter(!TORZSSZAM %in% c(110398, 913128)) %>% 
-                  mutate(CSOPORT = case_when(.$TORZSSZAM %in% c(920578, 920101, 916236) ~ "Welcome",
-                                             .$CSOPORT == "Minõségbiztosítás" ~ "Utánkövetés",
-                                             TRUE ~ .$CSOPORT))
+    filter(!TORZSSZAM %in% c(110398, 913128)) %>%
+    mutate(
+      CSOPORT = case_when(
+        .$TORZSSZAM %in% c(920578, 920101, 916236) ~ "Welcome",
+        .$CSOPORT == "Minõségbiztosítás" ~ "Utánkövetés",
+        TRUE ~ .$CSOPORT
+      )
+    )
   
   
   #######################################################################################
@@ -491,91 +500,15 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
   corr_coeff <- 1 - ((0.9 - corr_pct) / 0.01 * 0.002)
   
   # Generate final rolling report per user ----------------------------------------------
-  t_telj_final <- t_telj_komb_agg %>%
-    group_by(CSOPORT, TORZSSZAM, NEV) %>%
-    summarise(
-      ERINTETT_DB = sum(ERINTETT_DB),
-      SULYOZOTT_DB = sum(SULYOZOTT_DB),
-      JELENVOLT_MNAP = n_distinct(NAP),
-      LEAN_IFI_MNAP = sum(LOGIDO_MM) / 60 / 7
-    )
-  
-  t_telj_final$DATUM <- as.character(Sys.Date() - 1)
-  
-  t_telj_final <- t_telj_final[, c(8, 1:7)]
-  
-  #t_telj_final <- t_telj_final[!t_telj_final$NEV %in% c("XY"), ]
-  
-  t_elvaras <- t_telj_final %>%
-    group_by(CSOPORT) %>%
-    summarise(NAPI_ELVART_DB = sum(SULYOZOTT_DB) / sum(LEAN_IFI_MNAP))
-  
-  t_telj_final <- left_join(t_telj_final, t_elvaras, by = "CSOPORT")
-  
-  t_telj_final$IDOSZAKI_ELVART_DB <-
-    t_telj_final$LEAN_IFI_MNAP * t_telj_final$NAPI_ELVART_DB
-  
-  t_telj_final$TELJ_MENNYISEGI_ALAP <-
-    t_telj_final$SULYOZOTT_DB / t_telj_final$IDOSZAKI_ELVART_DB
-  
-  t_telj_final$BSC_KORR <- corr_coeff
-  
-  t_telj_final$TELJ_MENNYISEGI <-
-    t_telj_final$TELJ_MENNYISEGI_ALAP * t_telj_final$BSC_KORR
-  
-  t_telj_final <- left_join(t_telj_final, t_min, by = "TORZSSZAM")
-  
-  t_telj_final$TELJ_OSSZESEN <-
-    t_telj_final$TELJ_MENNYISEGI * t_telj_final$TELJ_MINOSEGI
-  
-  t_telj_final <- t_telj_final %>% arrange(CSOPORT, NEV)
-  
+  t_telj_final <- gen_perf_report(t_telj_komb_agg, corr_coeff, t_min, type = "agg")
   
   # Generate report for day before per user ---------------------------------------------
   t_telj_lastday <-
     t_telj_komb_agg[t_telj_komb_agg$NAP == max(t_telj_komb_agg$NAP), ]
-  t_telj_lastday <-
-    t_telj_lastday %>% group_by(CSOPORT, TORZSSZAM, NEV) %>%
-    summarise(
-      ERINTETT_DB = sum(ERINTETT_DB),
-      SULYOZOTT_DB = sum(SULYOZOTT_DB),
-      JELENVOLT_MNAP = n_distinct(NAP),
-      LEAN_IFI_MNAP = sum(LOGIDO_MM) / 60 / 7
-    )
   
-  t_telj_lastday$DATUM <- as.character(Sys.Date() - 1)
-  t_telj_lastday <- t_telj_lastday[, c(8, 1:7)]
+  t_telj_lastday <- gen_perf_report(t_telj_lastday, corr_coeff, t_min, type = "last")
   
-  #t_telj_lastday <- t_telj_lastday[!t_telj_lastday$NEV %in% c("XY"), ]
-  
-  t_elvaras <- t_telj_lastday %>%
-    group_by(CSOPORT) %>%
-    summarise(NAPI_ELVART_DB = sum(SULYOZOTT_DB) / sum(LEAN_IFI_MNAP))
-  
-  t_telj_lastday <-
-    left_join(t_telj_lastday, t_elvaras, by = "CSOPORT")
-  
-  t_telj_lastday$IDOSZAKI_ELVART_DB <-
-    t_telj_lastday$LEAN_IFI_MNAP * t_telj_lastday$NAPI_ELVART_DB
-  
-  t_telj_lastday$TELJ_MENNYISEGI_ALAP <-
-    t_telj_lastday$SULYOZOTT_DB / t_telj_lastday$IDOSZAKI_ELVART_DB
-  
-  t_telj_lastday$BSC_KORR <- corr_coeff
-  
-  t_telj_lastday$TELJ_MENNYISEGI <-
-    t_telj_lastday$TELJ_MENNYISEGI_ALAP * t_telj_lastday$BSC_KORR
-  
-  t_telj_lastday <-
-    left_join(t_telj_lastday, t_min, by = "TORZSSZAM")
-  
-  t_telj_lastday$TELJ_OSSZESEN <-
-    t_telj_lastday$TELJ_MENNYISEGI * t_telj_lastday$TELJ_MINOSEGI
-  
-  t_telj_lastday <- t_telj_lastday %>% arrange(CSOPORT, NEV)
-  
-  
-  # Generate aggregated analytics per user ----------------------------------------------------------
+  # Generate aggregated analytics per user ----------------------------------------------
   t_telj_csoport <-
     group_by(
       t_telj_komb,
@@ -722,7 +655,7 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
   
   
   # Save dashboard input to local storage and db table
-  to_gongy <- t_telj_final %>% ungroup()
+  to_gongy <- t_telj_final %>% select(-KOMP, -BESOROLAS) %>% ungroup()
   to_napi <- t_telj_lastday %>% ungroup()
   
   gongy <-
