@@ -132,7 +132,7 @@ BEGIN
           FROM   (SELECT   a.f_ivk,
                            x.f_lean_tip,
                            kontakt.basic.get_alirattipusid_alirattipus (
-                              a.f_alirattipusid
+                              c.f_alirattipusid
                            )
                               AS feladat,
                            f_oka,
@@ -187,7 +187,9 @@ BEGIN
                                  'Tovabbad'
                            END
                               AS kimenet
-                    FROM   afc.t_afc_wflog_lin2 a, kontakt.t_lean_alirattipus x
+                    FROM   afc.t_afc_wflog_lin2 a,
+                           kontakt.t_lean_alirattipus x,
+                           kontakt.t_afcil_attrib c
                    WHERE   a.f_int_begin BETWEEN SYSDATE - 180
                                              AND  TRUNC (SYSDATE, 'DDD')
                            AND (a.f_int_end - a.f_int_begin) * 1440 < 45
@@ -195,6 +197,7 @@ BEGIN
                            AND afc.afc_wflog_intezkedes (a.f_ivkwfid,
                                                          a.f_logid) IS NOT NULL
                            AND a.f_alirattipusid = x.f_alirattipusid
+                           AND a.f_ivk = c.f_ivk(+)
                            AND UPPER (
                                  kontakt.basic.get_userid_login (a.f_userid)
                               ) NOT IN

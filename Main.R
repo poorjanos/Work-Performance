@@ -658,6 +658,10 @@ if (!(strftime(Sys.Date(),'%u') == 1 | strftime(Sys.Date(),'%u') == 7)) {
   to_gongy <- t_telj_final %>% select(-KOMP, -BESOROLAS) %>% ungroup()
   to_napi <- t_telj_lastday %>% ungroup()
   
+  # Recode NA to 999 as DBI::dbSendUpdate randomly fails on NA/NaN
+  gongy[is.na(gongy)] <- 999  
+  napi[is.na(napi)] <- 999  
+
   gongy <-
     read.csv(
       here::here(
