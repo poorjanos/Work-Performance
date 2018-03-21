@@ -229,7 +229,7 @@ jdbcConnection <-
 try(dbWriteTable(
   jdbcConnection,
   name = "T_IFI_HISTORY",
-  value = nap_collect_clean,
+  value = t_ifi_clean,
   overwrite = FALSE,
   append = TRUE
 ))
