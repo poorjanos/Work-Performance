@@ -69,7 +69,7 @@ dir.create(here::here("Utils"), showWarnings = FALSE)
 ########################################################################################
 
 # Set JAVA_HOME, set max. memory, and load rJava library
-Sys.setenv(JAVA_HOME = "C:\\Program Files\\Java\\jre1.8.0_60")
+Sys.setenv(JAVA_HOME = "C:\\Program Files\\Java\\jre1.8.0_171")
 options(java.parameters = "-Xmx2g")
 library(rJava)
 
@@ -570,6 +570,17 @@ write.xlsx(
   row.names = FALSE,
   append = TRUE
 )
+
+
+# Copy to publish folder
+try(file.copy(
+  here::here(
+    "Reports",
+    paste0("Teljesitmeny_", Sys.Date() - 1, ".xlsx")
+  ),
+  "C:/Users/PoorJ/Publish/Performance",
+  overwrite = T
+))
 
 
 # Save dashboard input to local storage and db table
