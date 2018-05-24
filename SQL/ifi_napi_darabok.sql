@@ -18,7 +18,11 @@ SELECT   a.user_azon,
          AND a.allapot_azon_feldolg = '67'
          AND b.forgtet_irany = 'J'
          AND a.user_azon IN
-                  ('KISSAT',
+                  ('CSIZMAZIAA',
+                   'KOVESIA',
+                   'FELLNERH',
+                   'MOLNARAM',
+                   'KISSAT',
                    'FILATZNM',
                    'HORVATHANDR',
                    'KERTESZA',
