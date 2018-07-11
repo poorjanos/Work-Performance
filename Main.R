@@ -415,7 +415,7 @@ t_telj_komb_agg <- t_telj_komb_agg %>%
 
 # Compute correction coeff
 corr_pct <- t_korr[t_korr$IDOSZAK == period, "PERF_PCT"]
-corr_coeff <- 1 - ((0.9 - corr_pct) / 0.01 * 0.002)
+corr_coeff <- ifelse(corr_pct < 0.9, 1 - ((0.9 - corr_pct) / 0.01 * 0.002), 1)
 
 # Generate final rolling report per user ----------------------------------------------
 t_telj_final <- gen_perf_report(t_telj_komb_agg, corr_coeff, t_min, type = "agg")
