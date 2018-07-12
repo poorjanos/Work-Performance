@@ -4,7 +4,6 @@
 *.xlsx
 *.xls
 scriptLog
-gen_2018H1_results.R
 /Final-results
 
 # History files
