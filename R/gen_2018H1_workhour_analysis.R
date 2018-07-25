@@ -9,7 +9,7 @@ library(dplyr)
 library(lubridate)
 library(xlsx)
 
-period  <- "2018H1"
+period  <- "2018H2"
 t_telj_komb <- read.csv(here::here("Data",
                                    "Analitika",
                                    paste0("t_analitika_", period, ".csv")), stringsAsFactors = FALSE)
@@ -35,4 +35,4 @@ t_user_susp <-  t_telj_komb %>%
   summarize(GYANUS_NAPO_DB = sum(GYANUS_NAP)) %>% 
   ungroup()
 
-write.xlsx(t_user_susp, here::here("Reports", "Workhour_analysis.xlsx"))
+write.xlsx(t_user_susp, here::here("Reports", paste0("Workhour_analysis_", period, ".xlsx")))
