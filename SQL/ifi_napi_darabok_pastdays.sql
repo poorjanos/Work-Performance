@@ -14,7 +14,7 @@ SELECT   a.user_azon,
          AND a.forgtet_azon = b.forgtet_azon
          AND a.azon_forgtet_azon = b.azon_forgtet_azon
          AND TRUNC (a.azon_forgtet_mod_idopont, 'ddd') =
-               TRUNC (SYSDATE, 'ddd') - 1
+               TRUNC (SYSDATE, 'ddd') - 3
          AND a.allapot_azon_feldolg = '67'
          AND b.forgtet_irany = 'J'
          AND a.user_azon IN
