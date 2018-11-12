@@ -100,13 +100,11 @@ jdbcConnection <-
 readQuery <-
   function(file)
     paste(readLines(file, warn = FALSE), collapse = "\n")
-user_name_group <-
-  readQuery(here::here(
-    "Utils",
-    "user_name_group.sql"
-  ))
-al_il_darabok <- "select * from t_al_il_telj_kimenet"
-al_il_sulyok <- "select * from t_al_il_suly_kimenet"
+
+user_name_group <- readQuery(here::here("Utils", "user_name_group.sql"))
+al_il_sulyok <- readQuery(here::here("SQL", "select_al_il_weight.sql"))
+al_il_darabok <- readQuery(here::here("SQL", "select_al_il_perf.sql"))
+
 minoseg <- paste0("select * from t_minoseg_", period)
 korr <- "select * from t_bsc_korr"
 
