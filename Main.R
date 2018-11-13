@@ -267,7 +267,7 @@ bazis <-
 t_komb_suly <-
   t_komb_suly %>% mutate(BAZIS = bazis, SULY = MEDIAN / bazis)
 
-# Save weights to local storage and db table
+# Save weights to local storage
 write.csv(
   t_komb_suly,
   here::here(
@@ -277,25 +277,6 @@ write.csv(
   ),
   row.names = FALSE
 )
-
-# Overwrite db table
-jdbcConnection <-
-  dbConnect(
-    jdbcDriver,
-    url = kontakt$server,
-    user = kontakt$uid,
-    password = kontakt$pwd
-  )
-
-try(dbWriteTable(
-  jdbcConnection,
-  name = paste0("T_SULYOK_", period),
-  value = t_komb_suly,
-  overwrite = TRUE,
-  append = FALSE
-))
-
-dbDisconnect(jdbcConnection)
 
 
 ########################################################################################
