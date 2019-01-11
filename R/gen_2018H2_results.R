@@ -68,16 +68,27 @@ jdbcConnection <-
     user = kontakt$uid,
     password = kontakt$pwd
   )
+readQuery <-
+  function(file)
+    paste(readLines(file, warn = FALSE), collapse = "\n")
 
+user_name_group <- readQuery(here::here("Utils", "user_name_group.sql"))
 minoseg <- paste0("select * from t_minoseg_", period)
 korr <- "select * from t_bsc_korr"
 
 # Run queries
 t_min <- dbGetQuery(jdbcConnection, minoseg)
 t_korr <- dbGetQuery(jdbcConnection, korr)
+t_user_data <- dbGetQuery(jdbcConnection, user_name_group)
+
 
 # Close connection
 dbDisconnect(jdbcConnection)
+
+
+# Update group and name
+t_telj_komb <- t_telj_komb %>% select(-F_NEV, -F_KISCSOPORT) %>% 
+                left_join(t_user_data, by = c("TORZSSZAM" = "F_TORZSSZAM"))
 
 
 # Aggregate and add weights ------------------------------------------------------------
