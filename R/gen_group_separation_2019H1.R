@@ -125,6 +125,13 @@ t_telj_komb <- t_telj_komb %>%
   filter(!TORZSSZAM %in% c("934643", "952361"))
 
 
+# No groups
+t_telj_komb <- t_telj_komb %>% 
+  filter(F_KISCSOPORT %in% c("Operatív feldolgozás", "Utánkövetés", "Operatív kiszolgálás", "Minõségbiztosítás", "Logisztika")) %>% 
+  filter(!TORZSSZAM %in% c("934643", "952361", "925516", "936314", "947735", "943001", "959450", "916236")) %>% 
+  mutate(F_KISCSOPORT = "AFC")
+
+
 
 
 # Aggregate and add weights -----------------------------------------------
