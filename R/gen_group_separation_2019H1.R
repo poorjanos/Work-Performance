@@ -34,8 +34,8 @@ t_telj_komb <- read.csv(here::here("Data",
 # Correction for parallel calls ########################################################
 ########################################################################################
 
-ivk_to_drop <- read.csv(here::here("Data", "Kontakt", "Hivas_korr_2018H2.csv"), sep = ";")
-t_telj_komb <- t_telj_komb %>% filter(!F_IVK %in% ivk_to_drop$F_IVK)
+# ivk_to_drop <- read.csv(here::here("Data", "Kontakt", "Hivas_korr_2018H2.csv"), sep = ";")
+# t_telj_komb <- t_telj_komb %>% filter(!F_IVK %in% ivk_to_drop$F_IVK)
 
 
 ########################################################################################
@@ -91,7 +91,43 @@ t_telj_komb <- t_telj_komb %>% select(-F_NEV, -F_KISCSOPORT) %>%
                 left_join(t_user_data, by = c("TORZSSZAM" = "F_TORZSSZAM"))
 
 
-# Aggregate and add weights ------------------------------------------------------------
+
+# Clean data --------------------------------------------------------------
+t_telj_komb <- t_telj_komb %>% 
+  filter(!TORZSSZAM %in% c("110398", "913128", "918039", "110416")) # VajdaN, PolcJne, BrummerJ, HorvathneDJ
+
+# t_telj_komb <- t_telj_komb %>%
+#   mutate(
+#     CSOPORT = case_when(
+#       # Break up Minbizt
+#       .$TORZSSZAM %in% c(920578, 920101, 916236) ~ "Welcome",
+#       .$CSOPORT == "Minõségbiztosítás" ~ "Utánkövetés",
+#       # Break up op-feldolg
+#       .$TORZSSZAM %in% c(924975, 918889, 918887, 952241) ~ "Operatív feldolgozás pü",
+#       .$CSOPORT == "Operatív feldolgozás" ~ "Operatív feldolgozás ajánlat",
+#       TRUE ~ .$CSOPORT
+#     )
+#   )
+
+
+# Patnerkiszolg after 1st April
+t_telj_komb <- t_telj_komb %>% 
+  filter(lubridate::ymd(NAP) >= as.Date("2019-04-01"))
+
+
+# CsimaziaA without April
+t_telj_komb <- t_telj_komb %>% 
+  filter(!(TORZSSZAM == "927877" & stringr::str_detect(NAP, "2019-04")))
+
+
+# Minbizt without CsaszarFr and NemethB
+t_telj_komb <- t_telj_komb %>% 
+  filter(!TORZSSZAM %in% c("934643", "952361"))
+
+
+
+
+# Aggregate and add weights -----------------------------------------------
 t_telj_komb_agg <- t_telj_komb %>%
   group_by(
     NAP,
@@ -118,17 +154,14 @@ t_telj_komb_agg <- t_telj_komb %>%
            SULY) %>% 
   ungroup()
 
-# Remove users and recode groups--------------------------------------------------------
+
+# Regroup
 t_telj_komb_agg <- t_telj_komb_agg %>%
   filter(!TORZSSZAM %in% c(110398, 913128)) %>%
   mutate(
     CSOPORT = case_when(
-      # Break up Minbizt
       .$TORZSSZAM %in% c(920578, 920101, 916236) ~ "Welcome",
       .$CSOPORT == "Minõségbiztosítás" ~ "Utánkövetés",
-      # Break up op-feldolg
-      .$TORZSSZAM %in% c(924975, 918889, 918887, 952241) ~ "Operatív feldolgozás pü",
-      .$CSOPORT == "Operatív feldolgozás" ~ "Operatív feldolgozás ajánlat",
       TRUE ~ .$CSOPORT
     )
   )
