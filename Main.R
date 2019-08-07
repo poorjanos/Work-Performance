@@ -378,7 +378,7 @@ t_telj_komb_agg <- t_telj_komb %>%
 
 # Remove users and recode groups--------------------------------------------------------
 t_telj_komb_agg <- t_telj_komb_agg %>%
-  filter(!TORZSSZAM %in% c(110398, 913128)) %>%
+  filter(!TORZSSZAM %in% c(110398, 913128, 943001, 936314, 925516, 947735, 934643, 959450, 952361, 916236, 960445, 945748)) %>%
   mutate(
     CSOPORT = case_when(
       .$TORZSSZAM %in% c(920578, 920101, 916236) ~ "Welcome",
