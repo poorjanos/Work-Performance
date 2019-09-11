@@ -136,7 +136,14 @@ t_telj_komb <- t_telj_komb %>%
 t_telj_komb <-t_telj_komb %>% 
   mutate(F_KISCSOPORT = case_when(TORZSSZAM %in% c('924975', '918889', '918887', '956725') ~ "Opertív feldogozás PÜ",
                                   TRUE ~ F_KISCSOPORT))
-  
+
+
+# Partnekiszolgálás
+t_telj_komb <-t_telj_komb %>% 
+  mutate(F_KISCSOPORT = case_when(TORZSSZAM %in% c('952361', '934643', '959450', '916236') ~ "Partnerkiszolgálás",
+                                  TRUE ~ F_KISCSOPORT)) 
+
+
 
 # Aggregate and add weights -----------------------------------------------
 t_telj_komb_agg <- t_telj_komb %>%
@@ -171,7 +178,7 @@ t_telj_komb_agg <- t_telj_komb_agg %>%
   filter(!TORZSSZAM %in% c(110398, 913128)) %>%
   mutate(
     CSOPORT = case_when(
-      .$TORZSSZAM %in% c(920578, 920101, 916236) ~ "Welcome",
+      .$TORZSSZAM %in% c(920578, 920101) ~ "Welcome",
       .$CSOPORT == "Minõségbiztosítás" ~ "Utánkövetés",
       TRUE ~ .$CSOPORT
     )
